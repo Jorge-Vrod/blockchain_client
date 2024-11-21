@@ -1,3 +1,12 @@
+import CampaignABI from "./hardhat/artifacts/contracts/Campaign.sol/Campaign.json";
+import NFTBadgeABI from "./hardhat/artifacts/contracts/Campaign.sol/NFTBadge.json";
+
+export const campaignAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+export const nftBadgeAddress = "0xa16e02e87b7454126e5e10d957a927a7f5b5d2be";
+
+export const Campaign = { abi: CampaignABI.abi, address: campaignAddress };
+export const NFTBadge = { abi: NFTBadgeABI.abi, address: nftBadgeAddress };
+
 export default {
   colors: {
     default: "#344675",

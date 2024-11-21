@@ -10,7 +10,13 @@
       "breakOnLoad": true,
       "sourceMapPathOverrides": {
         "webpack:///src/*": "${webRoot}/*"
-      }
+      },
+      "pathMappings": [
+        {
+          "url": "webpack://vue-black-dashboard/src/pages",
+          "path": "${workspaceFolder}/src/pages"
+        }
+      ]
     }
   ]
 }

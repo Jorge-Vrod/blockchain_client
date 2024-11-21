@@ -38,7 +38,7 @@
                   <input
                     type="text"
                     class="form-control"
-                    v-model="number"
+                    v-model="donationAmount"
                     placeholder="Donation quantity (USD)"
                   />
                   <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
@@ -96,10 +96,8 @@ import LineChart from "@/components/Charts/LineChart";
 import * as chartConfigs from "@/components/Charts/config";
 import config from "@/config";
 import { ref, onMounted } from "vue";
-import { create } from "kubo-rpc-client";
 import { ethers } from "ethers";
-import { Buffer } from "buffer";
-import { addresses, abis } from "../contracts";
+import { Campaign, NFTBadge } from "@/config";
 import NFTGenerator from "@/components/NFTGenerator.vue";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -117,8 +115,8 @@ export default {
   },
   data() {
     return {
+      donationAmount: "",
       ipfsHash: "",
-      number: "",
       errorMessage: "",
       uploadMessage: "",
       defaultProvider: null,
@@ -170,14 +168,21 @@ export default {
     },
   },
   created() {
-    this.defaultProvider = new ethers.providers.Web3Provider(window.ethereum);
-    this.ipfsContract = new ethers.Contract(
-      addresses.ipfs,
-      abis.ipfs,
+  this.defaultProvider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545"); // Local Hardhat node
+
+  // Initialize contracts
+    this.campaignContract = new ethers.Contract(
+      Campaign.address,
+      Campaign.abi,
+      this.defaultProvider
+    );
+    this.nftBadgeContract = new ethers.Contract(
+      NFTBadge.address,
+      NFTBadge.abi,
       this.defaultProvider
     );
 
-    window.ethereum.enable();
+    this.setupBadgeMintedListener();
   },
   methods: {
     async readFile() {
@@ -197,54 +202,63 @@ export default {
       this.ipfsHash = hash;
     },
     async handleSubmit() {
-      await this.readFile();
-
-      if (this.number === "" || isNaN(this.number) || this.number < 0 || this.number > 1000000) {
-        this.errorMessage = "Please enter a valid number between 0 and 1,000,000.";
-        this.uploadMessage = ""; // Clear previous messages if validation fails
+      if (this.donationAmount === "" || isNaN(this.donationAmount) || this.donationAmount <= 0) {
+        this.errorMessage = "Please enter a valid donation amount.";
         return;
       }
 
       this.errorMessage = "";
-      this.uploadMessage = "Uploading image to IPFS...";
+      this.successMessage = "Processing your donation...";
 
       try {
-        const client = create({ url: "/ip4/127.0.0.1/tcp/5001" });
+        const signer = this.defaultProvider.getSigner();
+        const campaignWithSigner = this.campaignContract.connect(signer);
 
-        const response = await fetch("https://picsum.photos/200");
+        // Send contribution
+        const tx = await campaignWithSigner.contribute({
+          value: ethers.utils.parseEther(this.donationAmount.toString()),
+        });
 
-        if (!response.ok) {
-          throw new Error("Image file not found or inaccessible.");
-        }
+        // Wait for transaction to be mined
+        let receipt = await tx.wait();
+        console.log(receipt.events);
 
-        const fileBuffer = await response.arrayBuffer();
-
-        const fileResult = await client.add(Buffer.from(fileBuffer));
-
-        const filePath = `/${fileResult.cid}`;
-
-        let fileExists = false;
-        for await (const file of client.files.ls("/")) {
-          if (file.name === fileResult.cid.toString()) {
-            fileExists = true;
-            break;
-          }
-        }
-
-        if (fileExists) {
-          await client.files.rm(filePath, { recursive: true });
-        }
-
-        await client.files.cp(`/ipfs/${fileResult.cid}`, filePath);
-
-        await this.setFileIPFS(fileResult.cid.toString());
-        this.uploadMessage = "Image uploaded successfully! CID: " + fileResult.cid;
+        this.successMessage = "Donation successful! Waiting for badge generation...";
       } catch (error) {
-        console.error("Error during upload:", error.message);
-        this.uploadMessage = "Error uploading image to IPFS.";
+        console.error("Error processing donation:", error);
+        this.errorMessage = "There was an issue with your donation. Please try again.";
       }
     },
-  },
+    setupBadgeMintedListener() {
+      this.nftBadgeContract.removeAllListeners("BadgeMinted");
+      this.nftBadgeContract.on("BadgeMinted", async (badgeId, recipient, tierIndex) => {
+        console.log("BadgeMinted event detected:", badgeId, recipient, tierIndex);
+
+        // Check recipient address and update UI
+        const signerAddress = (await this.defaultProvider.getSigner().getAddress()).toLowerCase();
+        if (recipient.toLowerCase() === signerAddress) {
+          this.successMessage = `Badge minted successfully! Badge ID: ${badgeId}`;
+        }
+      });
+    },
+    async generateNFT(tokenURI) {
+      try {
+        const response = await fetch(tokenURI);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch metadata from ${tokenURI}`);
+        }
+
+        const metadata = await response.json();
+
+        // Render or use metadata to display the NFT image
+        console.log("NFT Metadata:", metadata);
+        this.successMessage = `NFT generated successfully! View your NFT at ${tokenURI}`;
+      } catch (error) {
+        console.error("Error generating NFT:", error);
+        this.errorMessage = `Failed to generate NFT: ${error.message}`;
+      }
+    },
+  }
 };
 
 </script>

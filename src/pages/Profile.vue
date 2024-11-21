@@ -26,7 +26,6 @@ import UserCard from "./Profile/UserCard";
 import { create } from "kubo-rpc-client";
 import { ethers } from "ethers";
 import { Buffer } from "buffer";
-import { addresses, abis } from "../contracts/src"
 
 export default {
   components: {
