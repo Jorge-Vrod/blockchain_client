@@ -1,9 +1,11 @@
 const webpack = require("webpack");
 
 module.exports = {
+  devServer: {
+    port: 3000, // Change the port to 3000
+  },
   lintOnSave: false,
   configureWebpack: {
-    devtool: 'source-map',
     // Set up all the aliases we use in our app.
     resolve: {
       alias: {
@@ -15,6 +17,7 @@ module.exports = {
         maxChunks: 6,
       }),
     ],
+    devtool: 'source-map',
   },
   pwa: {
     name: "Vue Black Dashboard",

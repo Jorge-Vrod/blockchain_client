@@ -1,5 +1,5 @@
 <template>
-    <div class="card h-100">
+    <div class="card h-100" @click="viewDetails">
       <img :src="campaign.image" class="card-img-top" alt="Campaign image" />
       <div class="card-body">
         <h5 class="card-title">{{ campaign.name }}</h5>
@@ -44,6 +44,11 @@
         return ((this.campaign.dollarsFunded / this.campaign.dollarsNeeded) * 100).toFixed(2);
       },
     },
+    methods: {
+      viewDetails() {
+        this.$router.push({ name: "CampaignDetail", params: { id: this.campaign.id.toString() } });
+      },
+    },
   };
   </script>
   
@@ -53,6 +58,9 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     position: relative;
     overflow: hidden;
+  }
+  .card:hover {
+    transform: scale(1.015);
   }
   .card-title {
     font-size: 1.25rem;
