@@ -44,6 +44,8 @@
                   <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
                   <button type="submit" class="btn">Support campaign</button>
                 </form>
+                <!-- NFT Generator -->
+                <nft-generator v-if="nftHash" ref="nftGenerator" :nftHash="nftHash"></nft-generator>
               </div>
             </div>
           </div>
@@ -78,14 +80,6 @@
           </div>
         </div>
       </div>
-
-      <!-- NFT Generator -->
-      <div class="row mt-5">
-        <div class="col-12">
-          <h3>Generate an NFT</h3>
-          <nft-generator></nft-generator>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -95,10 +89,10 @@
 import LineChart from "@/components/Charts/LineChart";
 import * as chartConfigs from "@/components/Charts/config";
 import config from "@/config";
-import { ref, onMounted } from "vue";
 import { ethers } from "ethers";
-import { Campaign, NFTBadge } from "@/config";
+import { Campaign, NFTBadge, IPFS } from "@/config";
 import NFTGenerator from "@/components/NFTGenerator.vue";
+import { create } from 'kubo-rpc-client'
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -119,8 +113,11 @@ export default {
       ipfsHash: "",
       errorMessage: "",
       uploadMessage: "",
-      defaultProvider: null,
+      localProvider: null,
       ipfsContract: null,
+      campaignContract: null,
+      nftBadgeContract: null,
+      nftHash: null,
       campaign: {
         id: 1,
         name: "Save the Rainforest",
@@ -167,26 +164,52 @@ export default {
       return ((this.campaign.dollarsFunded / this.campaign.dollarsNeeded) * 100).toFixed(2);
     },
   },
-  created() {
-  this.defaultProvider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545"); // Local Hardhat node
+  beforeUnmount() {
+    this.nftBadgeContract.removeAllListeners("BadgeMinted");
+  },
+  async created() {
+    this.localProvider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545"); // Local Hardhat node
+    this.defaultProvider = new ethers.providers.Web3Provider(window.ethereum);
 
-  // Initialize contracts
+    this.ipfsContract = new ethers.Contract(
+      IPFS.address,
+      IPFS.abi,
+      this.defaultProvider
+    );
+
     this.campaignContract = new ethers.Contract(
       Campaign.address,
       Campaign.abi,
-      this.defaultProvider
+      this.localProvider
     );
+
     this.nftBadgeContract = new ethers.Contract(
       NFTBadge.address,
       NFTBadge.abi,
-      this.defaultProvider
+      this.localProvider
     );
+
+    window.ethereum.enable();
 
     this.setupBadgeMintedListener();
   },
   methods: {
+    async connectMetaMask() {
+      try {
+        if (!window.ethereum) {
+          throw new Error("MetaMask not installed. Please install MetaMask and try again.");
+        }
+
+        // Request MetaMask to connect
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        console.log("MetaMask connected.");
+      } catch (error) {
+        console.error("Error connecting to MetaMask:", error.message);
+        alert("Error connecting to MetaMask: " + error.message);
+      }
+    },
     async readFile() {
-      const signer = await this.defaultProvider.getSigner();
+      const signer = await this.localProvider.getSigner();
       const file = await this.ipfsContract.userFiles(signer.getAddress());
       if (file !== ZERO_ADDRESS) {
         this.ipfsHash = file;
@@ -195,7 +218,7 @@ export default {
     },
     async setFileIPFS(hash) {
       const ipfsWithSigner = this.ipfsContract.connect(
-        this.defaultProvider.getSigner()
+        this.localProvider.getSigner()
       );
       const tx = await ipfsWithSigner.setFileIPFS(hash);
       await tx.wait(); // Ensure the transaction is mined before proceeding
@@ -211,7 +234,7 @@ export default {
       this.successMessage = "Processing your donation...";
 
       try {
-        const signer = this.defaultProvider.getSigner();
+        const signer = this.localProvider.getSigner();
         const campaignWithSigner = this.campaignContract.connect(signer);
 
         // Send contribution
@@ -221,12 +244,65 @@ export default {
 
         // Wait for transaction to be mined
         let receipt = await tx.wait();
-        console.log(receipt.events);
+        
 
         this.successMessage = "Donation successful! Waiting for badge generation...";
       } catch (error) {
         console.error("Error processing donation:", error);
         this.errorMessage = "There was an issue with your donation. Please try again.";
+      }
+    },
+    async uploadToIPFS() {
+      this.errorMessage = "";
+      this.uploadMessage = "Uploading image to IPFS...";
+
+      try {
+        const client = create({ url: "/ip4/127.0.0.1/tcp/5001" });
+
+        // Get the canvas data from the child component
+        const nftGenerator = this.$refs['nftGenerator'];
+        if (!nftGenerator) {
+          return;
+        }
+        const canvas = nftGenerator.$refs.canvas;
+
+        // Convert canvas to Blob
+        const canvasBlob = await new Promise((resolve) =>
+          canvas.toBlob(resolve, "image/png")
+        );
+
+        if (!canvasBlob) {
+          throw new Error("Failed to generate canvas image blob.");
+        }
+
+        // Upload to IPFS
+        const fileResult = await client.add(canvasBlob);
+
+        const filePath = `/${fileResult.cid}`;
+
+        // Check if file exists in IPFS
+        let fileExists = false;
+        for await (const file of client.files.ls("/")) {
+          if (file.name === fileResult.cid.toString()) {
+            fileExists = true;
+            break;
+          }
+        }
+
+        // Remove the old file if it exists
+        if (fileExists) {
+          await client.files.rm(filePath, { recursive: true });
+        }
+
+        // Copy file to IPFS
+        await client.files.cp(`/ipfs/${fileResult.cid}`, filePath);
+
+        // Display success message
+        this.uploadMessage = "Image uploaded successfully! CID: " + fileResult.cid;
+        console.log(this.uploadMessage);
+      } catch (error) {
+        console.error("Error during upload:", error.message);
+        this.uploadMessage = "Error uploading image to IPFS.";
       }
     },
     setupBadgeMintedListener() {
@@ -235,9 +311,13 @@ export default {
         console.log("BadgeMinted event detected:", badgeId, recipient, tierIndex);
 
         // Check recipient address and update UI
-        const signerAddress = (await this.defaultProvider.getSigner().getAddress()).toLowerCase();
+        const signerAddress = (await this.localProvider.getSigner().getAddress()).toLowerCase();
         if (recipient.toLowerCase() === signerAddress) {
           this.successMessage = `Badge minted successfully! Badge ID: ${badgeId}`;
+          this.nftHash = badgeId._hex;
+          if (this.nftHash) {
+            await this.uploadToIPFS();
+          }
         }
       });
     },

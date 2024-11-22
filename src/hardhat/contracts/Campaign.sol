@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
 
 contract NFTBadge is ERC721, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
@@ -39,6 +40,8 @@ contract NFTBadge is ERC721, Ownable, ReentrancyGuard {
         badgeTiers.push(BadgeTier("Silver", 0.1 ether, 0.5 ether));
         badgeTiers.push(BadgeTier("Gold", 0.5 ether, 1 ether));
         badgeTiers.push(BadgeTier("Platinum", 1 ether, type(uint256).max));
+
+        console.log("Address of the NFTBadge contract:", address(this));
     }
 
     // Add a function to set the Crowdfunding contract address (can only be called once by the owner)
@@ -67,9 +70,11 @@ contract NFTBadge is ERC721, Ownable, ReentrancyGuard {
     // Mint NFT badge to contributors (restricted to Crowdfunding contract)
     function mintBadge(address recipient, uint256 campaignId, uint256 amount) external onlyCrowdfunding nonReentrant returns (bool) {
         uint256 tierIndex = _getTierIndexByContribution(amount);
+        console.log("Calculated tierIndex:", tierIndex);
         if (tierIndex >= badgeTiers.length) {
             return false;  // No badge will be minted if no matching tier
         }
+
 
         _tokenIds.increment();
         uint256 newBadgeId = uint(keccak256(abi.encodePacked(_tokenIds.current(), address (this))));
@@ -77,6 +82,7 @@ contract NFTBadge is ERC721, Ownable, ReentrancyGuard {
 
         badges[newBadgeId] = Badge(tierIndex, campaignId);
         emit BadgeMinted(newBadgeId, recipient, tierIndex);
+        console.log("BadgeMinted emitted with ID:", newBadgeId);
 
         return true;  // Badge was minted
     }
@@ -193,6 +199,7 @@ contract Campaign is ReentrancyGuard {
             emit CampaignFunded(id, totalRaised);
         }
 
+        console.log("Minting badge for campaign:", id);
         bool badgeMinted = nftFactory.mintBadge(msg.sender, id, msg.value);
         emit ContributionMade(id, msg.sender, msg.value, badgeMinted);
     }

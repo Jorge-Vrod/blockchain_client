@@ -1,28 +1,23 @@
 <template>
     <div class="nft-generator">
-      <canvas ref="canvas" width="600" height="600"></canvas>
-  
-      <div class="controls">
-        <label>
-          NFT Hash:
-          <input type="text" v-model="nftHash" placeholder="Enter NFT Hash" />
-        </label>
-  
-        <button @click="generateNFT">Generate NFT</button>
-        <button @click="downloadNFT">Download NFT</button>
-      </div>
+      <canvas ref="canvas" width="120" height="120"></canvas>
     </div>
-  </template>
+</template>
   
   <script>
   export default {
     name: "NFTGenerator",
+    props: {
+      nftHash: {
+        type: String,
+        required: true,
+      },
+    },
     data() {
       return {
-        nftHash: "defaultHash", // Default NFT hash
         layers: [
-          { name: "Background", images: ["layer1-bg1.png", "layer1-bg2.png", "layer1-bg3.png", "layer1-bg4.png"] },
-          { name: "Character", images: ["layer2-char1.png", "layer2-char2.png"] },
+          { name: "Background", images: ["layer1-bg1.png", "layer1-bg2.png", "layer1-bg3.png", "layer1-bg4.png", "layer1-bg5.png"] },
+          { name: "Character", images: ["layer2-char1.png", "layer2-char2.png", "layer2-char3.png", "layer2-char4.png", "layer2-char5.png", "layer2-char6.png"] },
           { name: "Eyes", images: ["layer3-eyes1.png", "layer3-eyes2.png", "layer3-eyes3.png"] },
           { name: "Accessories", images: ["layer3-acc1.png", "layer3-acc2.png", "layer3-acc3.png", "layer3-acc4.png", "layer3-acc5.png"] },
         ],
