@@ -11,14 +11,14 @@
             :style="{ width: progressPercentage + '%' }"
             :aria-valuenow="campaign.dollarsFunded"
             :aria-valuemin="0"
-            :aria-valuemax="campaign.dollarsNeeded"
+            :aria-valuemax="campaign.objective"
           >
             {{ progressPercentage }}%
           </div>
         </div>
         <p>
           <strong>${{ campaign.dollarsFunded }}</strong> raised of
-          <strong>${{ campaign.dollarsNeeded }}</strong>
+          <strong>${{ campaign.objective }}</strong>
         </p>
       </div>
       <div class="card-footer d-flex justify-content-between align-items-center">
@@ -41,12 +41,12 @@
     },
     computed: {
       progressPercentage() {
-        return ((this.campaign.dollarsFunded / this.campaign.dollarsNeeded) * 100).toFixed(2);
+        return ((this.campaign.dollarsFunded / this.campaign.objective) * 100).toFixed(2);
       },
     },
     methods: {
       viewDetails() {
-        this.$router.push({ name: "CampaignDetail", params: { id: this.campaign.id.toString() } });
+        this.$router.push({ name: "CampaignPage", params: { id: this.campaign.id.toString() } });
       },
     },
   };

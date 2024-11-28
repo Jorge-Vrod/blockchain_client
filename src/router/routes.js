@@ -14,8 +14,10 @@ const Typography = () =>
   import(/* webpackChunkName: "common" */ "@/pages/Typography.vue");
 const TableList = () =>
   import(/* webpackChunkName: "common" */ "@/pages/TableList.vue");
-const CampaignDetail = () =>
-  import(/* webpackChunkName: "common" */ "@/pages/CampaignDetail.vue");
+const CampaignPage = () =>
+  import(/* webpackChunkName: "common" */ "@/components/Campaign/CampaignPage.vue");
+const CreateCampaignPage = () =>
+  import(/* webpackChunkName: "common" */ "@/components/Campaign/CreateCampaignPage.vue");
 
 const routes = [
   {
@@ -30,8 +32,14 @@ const routes = [
       },
       {
         path: "/campaign/:id",
-        name: "CampaignDetail",
-        component: CampaignDetail,
+        name: "CampaignPage",
+        component: CampaignPage,
+        props: true,
+      },
+      {
+        path: "/create-campaign",
+        name: "CreateCampaignPage",
+        component: CreateCampaignPage,
         props: true,
       },
       {

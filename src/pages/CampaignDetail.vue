@@ -1,89 +1,142 @@
 <template>
-  <div class="campaign-detail">
-    <div class="container">
-      <!-- Campaign Header -->
-      <div class="row mb-4">
-        <div class="col-12 text-center">
-          <h1 class="campaign-title">{{ campaign.name }}</h1>
-          <p class="campaign-description">{{ campaign.description }}</p>
-        </div>
-      </div>
+  <main>
+    <div class="campaign-page container">
+      <!-- Campaign Title -->
+      <header class="text-center mb-4">
+        <h1 class="campaign-title text-light">{{ campaign.name }}</h1>
+        <p class="campaign-description text-muted">{{ campaign.description }}</p>
+      </header>
 
-      <!-- Campaign Image and Info -->
-      <div class="row align-items-center">
-        <div class="col-md-6">
-          <img :src="campaign.image" alt="Campaign Image" class="img-fluid rounded shadow" />
-        </div>
-        <div class="col-md-6">
-          <div class="campaign-info">
-            <p><strong>Funding Progress:</strong></p>
-            <div class="progress mb-3">
-              <div
-                class="progress-bar"
-                role="progressbar"
-                :style="{ width: progressPercentage + '%' }"
-                :aria-valuenow="progressPercentage"
-                aria-valuemin="0"
-                aria-valuemax="100"
-              >
-                {{ progressPercentage }}%
-              </div>
-            </div>
-            <p><strong>Funds Needed:</strong> ${{ campaign.dollarsNeeded }}</p>
-            <p><strong>Funds Raised:</strong> ${{ campaign.dollarsFunded }}</p>
-            <p><strong>Viewed in Last Hour:</strong> {{ campaign.viewedLastHour }}</p>
-            <div class="col-md-6">
-              <div class="row mt-5">
-                <form @submit.prevent="handleSubmit">
-                  <input
-                    type="text"
-                    class="form-control"
-                    v-model="donationAmount"
-                    placeholder="Donation quantity (USD)"
-                  />
-                  <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
-                  <button type="submit" class="btn">Support campaign</button>
-                </form>
-                <!-- NFT Generator -->
-                <nft-generator v-if="nftHash" ref="nftGenerator" :nftHash="nftHash"></nft-generator>
-              </div>
-            </div>
+      <div class="row">
+        <!-- Campaign Information -->
+        <div class="col-lg-8">
+          <!-- Campaign Image -->
+          <div class="campaign-image mb-4">
+            <img
+              :src="campaign.image"
+              alt="Campaign Image"
+              class="img-fluid rounded shadow-lg"
+            />
           </div>
-        </div>
-      </div>
 
-      <!-- Campaign Objectives -->
-      <div class="row mt-5">
-        <div class="col-12">
-          <h3>Campaign Objectives</h3>
-          <ul>
-            <li><strong>$100,000:</strong> Saving the forest by protecting endangered areas.</li>
-            <li><strong>$200,000:</strong> Launch a large-scale reforestation project.</li>
-            <li><strong>$500,000:</strong> Create long-term conservation programs involving local communities.</li>
-          </ul>
-        </div>
-      </div>
+          <!-- Campaign Story -->
+          <div class="campaign-story mb-4">
+            <h4>Historia</h4>
+            <p class="text-muted">{{ campaign.story }}</p>
+          </div>
 
-      <!-- Donation Progress Chart -->
-      <div class="row mt-5">
-        <div class="col-12">
-          <h3>Donation Progress Over Time</h3>
-          <div class="chart-area">
+          <!-- Campaign Objectives -->
+          <div class="campaign-objectives mb-4">
+            <h4>Campaign Objectives</h4>
+            <ul class="list-group">
+              <li class="list-group-item bg-dark text-light">
+                <strong>$100,000:</strong> Saving the forest by protecting endangered areas.
+              </li>
+              <li class="list-group-item bg-dark text-light">
+                <strong>$200,000:</strong> Launch a large-scale reforestation project.
+              </li>
+              <li class="list-group-item bg-dark text-light">
+                <strong>$500,000:</strong> Create long-term conservation programs involving local communities.
+              </li>
+            </ul>
+          </div>
+
+          <!-- Donation Progress Chart -->
+          <div class="chart-area bg-dark rounded p-3 shadow">
             <line-chart
-              style="height: 100%"
+              style="height: 100%; width: 100%;"
               chart-id="green-line-chart"
               :chart-data="greenLineChart.chartData"
               :gradient-stops="greenLineChart.gradientStops"
               :extra-options="greenLineChart.extraOptions"
-            >
-            </line-chart>
+            ></line-chart>
           </div>
+        </div>
+
+        <!-- Sticky Sidebar -->
+        <div class="col-lg-4">
+          <aside class="bg-dark rounded p-4 shadow sticky-sidebar">
+            <!-- Progress Meter -->
+            <div class="progress-meter d-flex align-items-center mb-4">
+              <!-- Left Section: Funded and Needed Money -->
+              <div class="text-left">
+                <h3 class="text-success mb-1">{{ formattedFundsRaised }} € recaudados</h3>
+                <p class="text-muted mb-0">
+                  <strong>Objetivo de {{ formattedFundsNeeded }} €</strong>
+                </p>
+              </div>
+
+              <div class="flex-grow-1"></div>
+
+              <!-- Right Section: Progress Circle -->
+              <div class="ms-auto">
+                <div class="progress-circle">
+                  <svg height="80" width="80" viewBox="-40 -40 80 80">
+                    <path
+                      d="M 0 -36 A 36 36 0 1 1 0 36 A 36 36 0 1 1 0 -36"
+                      fill="none"
+                      stroke="#f4f2ec"
+                      stroke-width="8"
+                    />
+                    <path
+                      d="M 0 -36 A 36 36 0 1 1 0 36 A 36 36 0 1 1 0 -36"
+                      fill="none"
+                      stroke="#02a95c"
+                      stroke-width="8"
+                      stroke-linecap="round"
+                      :style="{ strokeDasharray: progressCircleStroke }"
+                    />
+                    <text
+                      x="0"
+                      y="6"
+                      text-anchor="middle"
+                      fill="#6F6F6F"
+                      font-size="16"
+                      font-weight="bold"
+                    >
+                      {{ progressPercentage }}%
+                    </text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-grid gap-2 mb-3">
+              <button class="btn btn-warning btn-lg">Donar ahora</button>
+              <button class="btn btn-outline-secondary btn-lg">Compartir</button>
+            </div>
+
+            <!-- Recent Donors -->
+            <div class="recent-donors">
+              <p class="text-muted mb-2"><strong>617 personas acaban de donar</strong></p>
+              <ul class="list-group">
+                <li
+                  v-for="(donation, index) in recentDonations"
+                  :key="index"
+                  class="list-group-item bg-dark text-light d-flex justify-content-between"
+                >
+                  <span>{{ donation.name }}</span>
+                  <strong>{{ donation.amount }} €</strong>
+                </li>
+              </ul>
+              <div class="d-flex justify-content-between mt-3">
+                <button class="btn btn-secondary text-center px-3">Ver todo</button>
+                <button
+                  class="btn btn-secondary text-center px-3 text-truncate"
+                  style="max-width: 200px;"
+                >
+                  <i class="bi bi-star-fill"></i> Ver mayores donativos
+                </button>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>
-  
+
 
 <script>
 import LineChart from "@/components/Charts/LineChart";
@@ -119,18 +172,34 @@ export default {
       nftBadgeContract: null,
       nftHash: null,
       campaign: {
-        id: 1,
-        name: "Save the Rainforest",
-        description: "Help us save the Amazon rainforest by funding reforestation projects.",
-        dollarsNeeded: 500000,
-        dollarsFunded: 120000,
-        image: "https://placehold.co/600x400/EEE/31343C",
-        viewedLastHour: 90,
+        name: "Buenos dias",
+        description:
+          "Epico",
+        objective: 64000,
+        dollarsFunded: 34000,
+        image:
+          "https://images.gofundme.com/kHJy-yu3kVQ1-P1faZ76EzZGLLI=/720x405/https://d2g8igdw686xgo.cloudfront.net/75380811_1694718762233171_r.jpeg",
+        story: `
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ac tortor ac tortor scelerisque gravida. Morbi sed diam dui. Maecenas feugiat varius imperdiet. Morbi ornare aliquam odio, nec lacinia justo vulputate in. Ut viverra tempor tristique. Etiam hendrerit nisl id magna convallis auctor. Cras finibus faucibus libero, quis porta elit mollis et. Integer tortor ipsum, pharetra eget felis a, eleifend lacinia lectus. In porttitor odio quis massa efficitur tincidunt sit amet vel ex.
+
+          Proin pulvinar congue urna vitae porttitor. Duis urna sapien, pharetra ullamcorper feugiat eget, placerat eget nisi. Nunc sed enim nunc. Vivamus ipsum enim, varius sit amet nisi at, euismod porta quam. Integer ullamcorper dui ut varius tempus. Mauris interdum luctus pellentesque. Ut euismod ipsum vehicula efficitur vulputate. Nulla facilisi. Duis aliquam semper neque, a fringilla massa. Morbi massa lacus, dapibus malesuada accumsan eu, fermentum ac nunc. Vestibulum vitae urna in nunc ornare posuere et ac arcu. Nulla cursus egestas mi, vitae commodo orci tempor euismod. Pellentesque semper, ipsum non euismod bibendum, lorem enim mattis lectus, eget congue sem nunc ut libero. Ut placerat malesuada purus nec ullamcorper. Fusce venenatis aliquam laoreet.
+
+          Ut tempor interdum vehicula. Nulla aliquam tortor rhoncus metus bibendum facilisis sed in lacus. Praesent ornare sodales neque, eget scelerisque lorem commodo ut. Suspendisse consectetur purus nec nulla pharetra suscipit. Quisque fermentum, ipsum finibus pulvinar egestas, est nibh congue mi, nec accumsan lorem sapien eu tellus. Maecenas luctus orci nulla, eget sagittis justo pulvinar in. Donec ante massa, rhoncus et ligula nec, eleifend fermentum dui. In ac purus nec magna aliquam viverra in egestas libero. Duis porttitor, ipsum et gravida vulputate, nulla nulla maximus elit, at accumsan orci orci nec massa. Duis id ultrices enim. Phasellus tincidunt semper sem at pulvinar. Vestibulum nec lorem at nibh sagittis iaculis vulputate sit amet massa.
+
+          Aliquam in eleifend quam. Mauris vel tristique velit. In bibendum iaculis leo ut elementum. Duis tristique accumsan mi, ut iaculis est sodales nec. Phasellus diam enim, placerat a eros at, varius finibus magna. Sed id eros lacus. Sed vulputate eros id lacus porttitor faucibus.
+
+          Donec et quam ac nibh commodo dictum non commodo velit. Proin tempor vitae purus eget pulvinar. Sed facilisis vel mauris eget maximus. Integer ligula quam, dignissim sit amet lorem vel, consectetur venenatis eros. Praesent pellentesque tortor in neque fermentum vehicula. Aenean eget sagittis erat, vel molestie lacus. Sed quis accumsan elit, vitae tempus erat. Phasellus turpis magna, ullamcorper at luctus ac, mattis sed nisl. Aenean quis sem facilisis, sollicitudin nibh a, condimentum urna. Ut tristique nunc tincidunt, egestas justo sit amet, maximus nisl. Fusce varius orci a orci congue, a vehicula tellus suscipit. Etiam vel odio a ligula laoreet iaculis. 
+        `,
       },
+      recentDonations: [
+        { name: "Anónimo", amount: 2000 },
+        { name: "Anónimo", amount: 2000 },
+        { name: "Ludmilla Cuevas Fenoll", amount: 15 },
+      ],
       greenLineChart: {
         extraOptions: chartConfigs.greenChartOptions,
         chartData: {
-          labels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5"],
+          labels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7", "Day 8", "Day 9", "Day 10", "Day 11", "Day 12", "Day 13"],
           datasets: [
             {
               label: "Donations (in USD)",
@@ -146,7 +215,7 @@ export default {
               pointHoverRadius: 4,
               pointHoverBorderWidth: 15,
               pointRadius: 4,
-              data: [80, 100, 70, 80, 120, 80],
+              data: [20, 23, 30, 41, 46, 53, 75, 90, 95, 103, 135, 142, 180],
             },
           ],
         },
@@ -161,7 +230,24 @@ export default {
   },
   computed: {
     progressPercentage() {
-      return ((this.campaign.dollarsFunded / this.campaign.dollarsNeeded) * 100).toFixed(2);
+      return ((this.campaign.dollarsFunded / this.campaign.objective) * 100).toFixed(2);
+    },
+    formattedFundsRaised() {
+      return new Intl.NumberFormat().format(this.campaign.dollarsFunded);
+    },
+    formattedFundsNeeded() {
+      return new Intl.NumberFormat().format(this.campaign.objective);
+    },
+    progressPercentage() {
+      return Math.min(
+        ((this.campaign.dollarsFunded / this.campaign.objective) * 100).toFixed(0),
+        100
+      );
+    },
+    progressCircleStroke() {
+      const circumference = 226; // Circle circumference
+      const progress = (this.campaign.dollarsFunded / this.campaign.objective) * circumference;
+      return `${progress}, ${circumference}`;
     },
   },
   beforeUnmount() {
@@ -321,23 +407,6 @@ export default {
         }
       });
     },
-    async generateNFT(tokenURI) {
-      try {
-        const response = await fetch(tokenURI);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch metadata from ${tokenURI}`);
-        }
-
-        const metadata = await response.json();
-
-        // Render or use metadata to display the NFT image
-        console.log("NFT Metadata:", metadata);
-        this.successMessage = `NFT generated successfully! View your NFT at ${tokenURI}`;
-      } catch (error) {
-        console.error("Error generating NFT:", error);
-        this.errorMessage = `Failed to generate NFT: ${error.message}`;
-      }
-    },
   }
 };
 
@@ -365,5 +434,21 @@ export default {
 }
 .chart-area {
   height: 400px;
+}
+.progress {
+    width: 65%;
+    height: 1rem; /* Adjust the height of the container */
+    background-color: #e9ecef; /* Optional: Set a neutral background for the container */
+    border-radius: 6px; /* Match the radius of the progress bar */
+    overflow: hidden; /* Prevent overflow of the bar */
+}
+.progress-bar {
+    background-color: #4caf50;
+    height: 100%; /* Ensure the bar fills the height of the container */
+    border-radius: inherit; /* Match the container's radius */
+}
+.sticky-sidebar {
+  position: sticky;
+  top: 20px; /* Adds 20px padding from the top when sticky */
 }
 </style>

@@ -2,13 +2,13 @@
 
  - Abrir una terminal (ejecuta la blockchain):
 
->     cd src/hardhat 
->     npx node
+>     cd server 
+>     npx hardhat node
 
  - Abrir otra terminal (despliega los contratos):
 
->     cd src/hardhat 
->     npx hardhat run scripts/deploy.js --network localhost
+>     cd server 
+>     node deploy.js
 
  - Copiar addresses de terminal de despliegue para CampaignContract
    (segunda terminal) y el address del NFTBadge que genera al crearse en
@@ -17,3 +17,10 @@
  - Abrir otra terminal:
 
 >     npm run serve
+
+ - Abrir otra terminal (ejecuta el servidor de la bbdd):
+
+>     json-server --watch ./db.json --port 5000
+
+
+

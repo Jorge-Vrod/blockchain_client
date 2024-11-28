@@ -1,7 +1,14 @@
+
 <template>
-    <div class="nft-generator">
-      <canvas ref="canvas" width="120" height="120"></canvas>
-    </div>
+  <div class="nft-generator">
+    <canvas 
+      ref="canvas" 
+      width="120" 
+      height="120" 
+      class="rounded shadow-lg"
+    ></canvas>
+    <!--<button type="submit" class="btn w-100" @click="generateNFT">Generate NFT</button>-->
+  </div>
 </template>
   
   <script>
@@ -30,7 +37,7 @@
         for (let i = 0; i < hash.length; i++) {
           total += hash.charCodeAt(i);
         }
-        return total % max;
+        return (Math.floor((Date.now() / 1000) * Math.random()) + total) % max;
       },
       async loadImage(src) {
         return new Promise((resolve, reject) => {

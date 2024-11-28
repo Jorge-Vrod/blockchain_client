@@ -53,7 +53,7 @@ export default {
               id: 1,
               name: "Save the Rainforest",
               description: "Help us save the Amazon rainforest by funding reforestation projects.",
-              dollarsNeeded: 50000,
+              objective: 50000,
               dollarsFunded: 40000,
               image: "https://placehold.co/600x400/EEE/31343C",
               viewedLastHour: 90,
@@ -62,7 +62,7 @@ export default {
               id: 2,
               name: "Ocean Cleanup Project",
               description: "Join our mission to remove plastic waste from the world's oceans.",
-              dollarsNeeded: 80000,
+              objective: 80000,
               dollarsFunded: 55000,
               image: "https://placehold.co/600x400/EEE/31343C",
               viewedLastHour: 90,
@@ -77,7 +77,7 @@ export default {
               id: 3,
               name: "Community Library Project",
               description: "Provide resources to underprivileged communities.",
-              dollarsNeeded: 20000,
+              objective: 20000,
               dollarsFunded: 5000,
               image: "https://placehold.co/600x400/EEE/31343C",
               viewedLastHour: 60,
@@ -86,7 +86,7 @@ export default {
               id: 4,
               name: "Disaster Relief Fund",
               description: "Provide immediate aid to those affected by recent natural disasters.",
-              dollarsNeeded: 100000,
+              objective: 100000,
               dollarsFunded: 25000,
               image: "https://placehold.co/600x400/EEE/31343C",
               viewedLastHour: 70,
@@ -101,7 +101,7 @@ export default {
               id: 5,
               name: "Support Local Artists",
               description: "Provide funding to help talented artists showcase their work.",
-              dollarsNeeded: 15000,
+              objective: 15000,
               dollarsFunded: 12000,
               image: "https://placehold.co/600x400/EEE/31343C",
               viewedLastHour: 50,
@@ -110,7 +110,7 @@ export default {
               id: 6,
               name: "Wildlife Sanctuary",
               description: "Fund the creation of safe havens for endangered species.",
-              dollarsNeeded: 60000,
+              objective: 60000,
               dollarsFunded: 30000,
               image: "https://placehold.co/600x400/EEE/31343C",
               viewedLastHour: 80,
@@ -123,7 +123,7 @@ export default {
 
   methods: {
     progressPercentage(campaign) {
-      return ((campaign.dollarsFunded / campaign.dollarsNeeded) * 100).toFixed(2);
+      return ((campaign.dollarsFunded / campaign.objective) * 100).toFixed(2);
     },
   },
 };

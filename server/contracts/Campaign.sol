@@ -163,7 +163,7 @@ contract Campaign is ReentrancyGuard {
     mapping(address => bool) hasRefunded;
     NFTBadge immutable private nftFactory;
 
-    event CampaignCreated(uint128 campaignId, address indexed creator, uint128 fundingGoal, uint256 deadline);
+    event CampaignCreated(uint128 campaignId, address indexed creator, uint128 fundingGoal, uint256 deadline, address nftBadgeAddress);
     event ContributionMade(uint128 campaignId, address indexed contributor, uint256 amount, bool badgeMinted);
     event CampaignFunded(uint128 campaignId, uint256 totalRaised);
     event FundsReleased(uint128 campaignId, address creator, uint256 amount);
@@ -177,12 +177,24 @@ contract Campaign is ReentrancyGuard {
         creator = payable(msg.sender);
         fundingGoal = _fundingGoal;
         creationTime = block.timestamp;
-        endTime =  creationTime + _duration;
+        endTime = creationTime + _duration;
         totalRaised = 0;
         isFunded = false;
         fundsClaimed = false;
-        nftFactory = new NFTBadge(address(this));
-        emit CampaignCreated(_id, msg.sender, _fundingGoal, creationTime + _duration);
+
+        nftFactory = new NFTBadge(address(this)); // Deploy the NFTBadge contract
+
+        emit CampaignCreated(
+            _id,
+            msg.sender,
+            _fundingGoal,
+            creationTime + _duration,
+            address(nftFactory) // Add the NFTBadge address to the event
+        );
+    }
+
+    function getNFTBadgeAddress() external view returns (address) {
+        return address(nftFactory);
     }
 
     // Contribute to a campaign
