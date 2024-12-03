@@ -70,7 +70,7 @@ contract NFTBadge is ERC721, Ownable, ReentrancyGuard {
     // Mint NFT badge to contributors (restricted to Crowdfunding contract)
     function mintBadge(address recipient, uint256 campaignId, uint256 amount) external onlyCrowdfunding nonReentrant returns (bool) {
         uint256 tierIndex = _getTierIndexByContribution(amount);
-        console.log("Calculated tierIndex:", tierIndex);
+        console.log("Calculated tierIndex for contribution of :", amount, tierIndex);
         if (tierIndex >= badgeTiers.length) {
             return false;  // No badge will be minted if no matching tier
         }
@@ -217,11 +217,14 @@ contract Campaign is ReentrancyGuard {
     }
 
     // Get campaign status
-    function getCampaignStatus() external view returns (uint256, uint256, uint256) {
+    function getCampaignStatus() external view returns (address, uint256, uint256, uint256, bool, bool) {
         return (
+            creator,
             totalRaised,
             fundingGoal,
-            endTime > block.timestamp ? endTime - block.timestamp : 0
+            endTime > block.timestamp ? endTime - block.timestamp : 0,
+            isFunded,
+            fundsClaimed
         );
     }
 

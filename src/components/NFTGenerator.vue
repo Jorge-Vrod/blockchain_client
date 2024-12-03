@@ -31,6 +31,9 @@
         imagesPath: "/templates/", // Adjust the path where your images are stored
       };
     },
+    mounted() {
+      this.generateNFT();   
+    },
     methods: {
       getHashIndex(hash, max) {
         let total = 0;
@@ -74,9 +77,7 @@
         link.href = canvas.toDataURL("image/png");
         link.click();
       },
-    },
-    mounted() {
-      this.generateNFT(); // Generate initial NFT
+
     },
   };
   </script>

@@ -4,7 +4,7 @@
       <ul class="nav">
         <li class="nav-item">
           <a class="nav-link" href="http://www.creative-tim.com">
-            Creative Tim
+            METH
           </a>
         </li>
         <li class="nav-item">

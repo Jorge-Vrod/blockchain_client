@@ -74,6 +74,7 @@
 <script>
 import { ethers } from "ethers";
 import axios from "axios";
+import { dollarsToWeis } from '@/services/etherService'
 
 export default {
   data() {
@@ -126,7 +127,7 @@ export default {
         // Deploy the campaign contract on the blockchain
         const deployResponse = await axios.post("http://localhost:5001/deploy-campaign", {
           id: newId,
-          goal: this.form.objective, // Campaign goal
+          goal: dollarsToWeis(this.form.objective)._hex, // Campaign goal
           duration: 10000000, // Example duration
         });
 
@@ -134,15 +135,14 @@ export default {
 
         // Create a new campaign object
         const newCampaign = {
-          id: newId,
+          id: newId.toString(),
           name: this.form.name,
           subtitle: this.form.subtitle,
           description: this.form.description,
-          objective: this.form.objective,
-          image: this.imagePreview, // Base64-encoded image
+          objective: parseFloat(this.form.objective),
           contractAddress: address, // Save the deployed contract address
-          contractAbi: abi, // Save the contract ABI
-          nftBadgeAddress: nftBadgeAddress
+          nftBadgeAddress: nftBadgeAddress,
+          image: this.imagePreview, // Base64-encoded image
         };
 
         // Save the campaign data to the mock database

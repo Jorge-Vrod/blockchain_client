@@ -13,12 +13,8 @@
       },
       "pathMappings": [
         {
-          "url": "webpack://vue-black-dashboard/src/components",
-          "path": "${workspaceFolder}/src/components"
-        },
-        {
-          "url": "webpack://vue-black-dashboard/src/pages",
-          "path": "${workspaceFolder}/src/pages"
+          "url": "webpack://vue-black-dashboard/src/",
+          "path": "${workspaceFolder}/src/"
         }
       ]
     }

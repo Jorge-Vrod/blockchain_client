@@ -3,12 +3,12 @@
  - Abrir una terminal (ejecuta la blockchain):
 
 >     cd server 
->     npx hardhat node
+>     ganache --db ./data --defaultBalanceEther 100000
 
  - Abrir otra terminal (despliega los contratos):
 
 >     cd server 
->     node deploy.js
+>     npx hardhat run scripts/deploy.js --network ganache
 
  - Copiar addresses de terminal de despliegue para CampaignContract
    (segunda terminal) y el address del NFTBadge que genera al crearse en
