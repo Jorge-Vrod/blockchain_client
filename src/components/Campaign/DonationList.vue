@@ -13,12 +13,12 @@
       </li>
     </ul>
     <div class="d-flex justify-content-between mt-3">
-      <button class="btn btn-secondary text-center px-3">Ver todo</button>
+      <button class="btn btn-secondary text-center px-3">See all</button>
       <button
         class="btn btn-secondary text-center px-3 text-truncate"
         style="max-width: 200px;"
       >
-        <i class="bi bi-star-fill"></i> Ver mayores donativos
+        <i class="bi bi-star-fill"></i> See greatest donations
       </button>
     </div>
   </div>

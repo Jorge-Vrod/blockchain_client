@@ -3,9 +3,9 @@
     <!-- Existing progress and donation section -->
     <div class="progress-meter d-flex align-items-center justify-content-between mb-4">
       <div class="progress-info w-50 text-start pe-3">
-        <h3 class="text-success mb-1">{{ formattedFundsRaised }} € recaudados</h3>
+        <h3 class="text-success mb-1">{{ formattedFundsRaised }} € funded</h3>
         <p class="text-muted mb-0">
-          <strong>Objetivo de {{ formattedFundsNeeded }} €</strong>
+          <strong>Objective of {{ formattedFundsNeeded }} €</strong>
         </p>
       </div>
       <div class="progress-circle w-50 text-end ps-3">
@@ -16,8 +16,8 @@
     </div>
     
     <!-- Donate button now triggers modal -->
-    <button v-if="!campaign.isFunded" class="btn btn-warning btn-lg w-100 mb-3" @click="openDonationModal">Donar ahora</button>
-    <button class="btn btn-outline-secondary btn-lg w-100">Compartir</button>
+    <button v-if="!campaign.isFunded" class="btn btn-warning btn-lg w-100 mb-3" @click="openDonationModal">Donate now</button>
+    <button class="btn btn-outline-secondary btn-lg w-100">Share</button>
     
     <DonationList :donations="recentDonations" />
 
@@ -25,7 +25,7 @@
     <div v-if="showDonationModal" class="modal-overlay">
       <div class="bg-dark modal-content">
         <div class="modal-header">
-          <h4 class="text-muted">Realizar Donación</h4>
+          <h4 class="text-muted">Make donation</h4>
         </div>
         <div class="modal-body">
           <div class="form-group">

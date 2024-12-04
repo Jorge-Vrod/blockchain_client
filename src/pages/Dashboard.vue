@@ -85,7 +85,7 @@ export default {
             _limit: 10,
           },
         });
-        return response.data;
+        return response.data.sort((a, b) => 0.5 - Math.random());
       } catch (error) {
         console.error("Error fetching campaigns from database:", error.message);
         return [];

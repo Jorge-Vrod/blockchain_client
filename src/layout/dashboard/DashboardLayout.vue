@@ -8,7 +8,7 @@
           icon="tim-icons icon-chart-pie-36"
         />
         <sidebar-link
-          to="/icons"
+          to="/create-campaign"
           :name="$t('sidebar.icons')"
           icon="tim-icons icon-atom"
         />

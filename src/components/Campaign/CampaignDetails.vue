@@ -2,7 +2,7 @@
     <div>
       <img :src="campaign.image" alt="Campaign Image" class="img-fluid rounded shadow-lg mb-4" />
       <div class="campaign-story">
-        <h4>Historia</h4>
+        <h4>Story</h4>
         <p class="text-muted">{{ campaign.description }}</p>
       </div>
       <!-- Campaign Objectives -->
