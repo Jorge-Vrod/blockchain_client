@@ -34,9 +34,12 @@
   </div>
 </template>
 
-
 <script>
 import CampaignCard from "./CampaignCard.vue";
+import { ethers } from "ethers";
+import { Campaign } from "@/config";
+import { weiToDollars } from "@/services/etherService";
+import axios from "axios";
 
 export default {
   components: {
@@ -48,86 +51,81 @@ export default {
         hotTopics: {
           name: "Hot Topics 🔥",
           description: "Check out the most popular campaigns right now!",
-          campaigns: [
-            {
-              id: 1,
-              name: "Save the Rainforest",
-              description: "Help us save the Amazon rainforest by funding reforestation projects.",
-              objective: 50000,
-              dollarsFunded: 40000,
-              image: "https://placehold.co/600x400/EEE/31343C",
-              viewedLastHour: 90,
-            },
-            {
-              id: 2,
-              name: "Ocean Cleanup Project",
-              description: "Join our mission to remove plastic waste from the world's oceans.",
-              objective: 80000,
-              dollarsFunded: 55000,
-              image: "https://placehold.co/600x400/EEE/31343C",
-              viewedLastHour: 90,
-            },
-          ],
+          campaigns: [],
         },
         latestCampaigns: {
           name: "Latest Campaigns 📆",
           description: "Check out the newest campaigns on our platform!",
-          campaigns: [
-            {
-              id: 3,
-              name: "Community Library Project",
-              description: "Provide resources to underprivileged communities.",
-              objective: 20000,
-              dollarsFunded: 5000,
-              image: "https://placehold.co/600x400/EEE/31343C",
-              viewedLastHour: 60,
-            },
-            {
-              id: 4,
-              name: "Disaster Relief Fund",
-              description: "Provide immediate aid to those affected by recent natural disasters.",
-              objective: 100000,
-              dollarsFunded: 25000,
-              image: "https://placehold.co/600x400/EEE/31343C",
-              viewedLastHour: 70,
-            },
-          ],
+          campaigns: [],
         },
         forYou: {
           name: "For You 🫵",
           description: "Campaigns we think you'll love!",
-          campaigns: [
-            {
-              id: 5,
-              name: "Support Local Artists",
-              description: "Provide funding to help talented artists showcase their work.",
-              objective: 15000,
-              dollarsFunded: 12000,
-              image: "https://placehold.co/600x400/EEE/31343C",
-              viewedLastHour: 50,
-            },
-            {
-              id: 6,
-              name: "Wildlife Sanctuary",
-              description: "Fund the creation of safe havens for endangered species.",
-              objective: 60000,
-              dollarsFunded: 30000,
-              image: "https://placehold.co/600x400/EEE/31343C",
-              viewedLastHour: 80,
-            },
-          ],
+          campaigns: [],
         },
       },
+      provider: null,
     };
   },
 
+  async created() {
+    this.provider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545");
+
+    const campaignsFromDb = await this.fetchCampaignsFromDatabase();
+    const campaigns = await this.fetchCampaignsWithBlockchainDetails(campaignsFromDb);
+
+    this.distributeCampaignsByTopics(campaigns);
+  },
+
   methods: {
-    progressPercentage(campaign) {
-      return ((campaign.dollarsFunded / campaign.objective) * 100).toFixed(2);
+    async fetchCampaignsFromDatabase() {
+      try {
+        const response = await axios.get("http://localhost:5000/campaigns", {
+          params: {
+            _limit: 10,
+          },
+        });
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching campaigns from database:", error.message);
+        return [];
+      }
+    },
+    async fetchCampaignsWithBlockchainDetails(campaignsFromDb) {
+      const campaignsWithDetails = [];
+
+      for (const campaign of campaignsFromDb) {
+        try {
+          const campaignContract = new ethers.Contract(
+            campaign.contractAddress,
+            Campaign.abi,
+            this.provider
+          );
+
+          const campaignStatus = await campaignContract.getCampaignStatus();
+          campaignsWithDetails.push({
+            ...campaign,
+            creatorAddress: campaignStatus[0],
+            dollarsFunded: weiToDollars(campaignStatus[1]._hex),
+            isFunded: campaignStatus[4],
+          });
+        } catch (error) {
+          console.error(`Error fetching blockchain data for campaign ${campaign.id}:`, error.message);
+        }
+      }
+
+      return campaignsWithDetails;
+    },
+
+    distributeCampaignsByTopics(campaigns) {
+      this.topics.hotTopics.campaigns = campaigns.slice(0, 2); // Top 2 campaigns as "Hot Topics"
+      this.topics.latestCampaigns.campaigns = campaigns.slice(2, 4); // Next 2 campaigns as "Latest Campaigns"
+      this.topics.forYou.campaigns = campaigns.slice(4); // Remaining campaigns as "For You"
     },
   },
 };
 </script>
+
 
 <style scoped>
 .card {

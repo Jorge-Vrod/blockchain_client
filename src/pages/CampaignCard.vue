@@ -3,7 +3,7 @@
       <img :src="campaign.image" class="card-img-top" alt="Campaign image" />
       <div class="card-body">
         <h5 class="card-title">{{ campaign.name }}</h5>
-        <p class="card-text">{{ campaign.description }}</p>
+        <p class="card-text">{{ campaign.subtitle }}</p>
         <div class="progress mb-2">
           <div
             class="progress-bar"

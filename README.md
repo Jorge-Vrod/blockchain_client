@@ -3,7 +3,7 @@
  - Abrir una terminal (ejecuta la blockchain):
 
 >     cd server 
->     ganache --db ./data --defaultBalanceEther 100000
+>     ganache-cli --db ./data --mnemonic "split mind despair volume hen account reform buddy version hobby tourist duty" --i 1337 --defaultBalanceEther 100000
 
  - Abrir otra terminal (despliega los contratos):
 

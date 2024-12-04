@@ -27,6 +27,12 @@ export const handleDonation = async (campaignContract, localProvider, donationAm
   const signer = localProvider.getSigner();
   const campaignWithSigner = campaignContract.connect(signer);
 
+  const signerAddress = await signer.getAddress();
+  const provider = signer.provider;
+
+  const initialBalance = await provider.getBalance(signerAddress);
+  console.log("Signer's balance (ETH):", ethers.utils.formatEther(initialBalance));
+
   // Convert donationAmount to BigNumber
   const donationInWei = USD_TO_WEI_CONVERSION_RATE.mul(donationAmount);
 

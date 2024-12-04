@@ -127,6 +127,7 @@
         var campaignDetails = await this.campaignContract.getCampaignStatus();
         this.campaign = {
           ...this.campaign,
+          creatorAddress: campaignDetails[0],
           dollarsFunded: weiToDollars(campaignDetails[1]._hex),
           isFunded: campaignDetails[4]
         };
