@@ -9,7 +9,6 @@
         <div class="col-lg-4">
           <CampaignSidebar 
             :campaign="campaign"
-            :recent-donations="recentDonations"
           />
         </div>
       </div>
@@ -38,11 +37,6 @@ export default {
   data() {
     return {
       campaign: null, // Placeholder for campaign data
-      recentDonations: [
-        { name: "Anónimo", amount: 2000 },
-        { name: "Anónimo", amount: 2000 },
-        { name: "Ludmilla Cuevas Fenoll", amount: 15 },
-      ],
       greenLineChart: {
         extraOptions: chartConfigs.greenChartOptions,
         chartData: {

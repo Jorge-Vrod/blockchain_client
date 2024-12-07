@@ -1,8 +1,12 @@
 <template>
   <!-- Recent Donors -->
   <div class="recent-donors">
-    <p class="text-muted mb-2"><strong>617 personas acaban de donar</strong></p>
-    <ul class="list-group">
+    <p class="text-muted mb-2">
+      <strong>
+        {{ donations.length > 0 ? donations.length + " people just donated" : "No donations yet. Be the first!" }}
+      </strong>
+    </p>
+    <ul v-if="donations.length > 0" class="list-group">
       <li
         v-for="(donation, index) in donations"
         :key="index"
@@ -12,7 +16,7 @@
         <strong>{{ donation.amount }} €</strong>
       </li>
     </ul>
-    <div class="d-flex justify-content-between mt-3">
+    <div v-if="donations.length > 0" class="d-flex justify-content-between mt-3">
       <button class="btn btn-secondary text-center px-3">See all</button>
       <button
         class="btn btn-secondary text-center px-3 text-truncate"
@@ -22,10 +26,16 @@
       </button>
     </div>
   </div>
-  </template>
+</template>
+
   
   <script>
   export default {
     props: { donations: Array },
+    computed: {
+      recentDonations() {
+        return Math.floor(Math.random() * (600 - 3) + 3);
+      }
+    }
   };
   </script>

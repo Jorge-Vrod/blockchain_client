@@ -72,15 +72,16 @@
   import { ethers } from "ethers";
   import { NFTBadge, Campaign, IPFS } from "@/config";
   import NFTGenerator from "@/components/NFTGenerator.vue";
+  import axios from "axios";
 
   export default {
     components: { ProgressCircle, DonationList, 'nft-generator': NFTGenerator, },
     props: {
         campaign: Object,   
-        recentDonations: Array,
     },
     data() {
       return {
+        recentDonations: [],
         nftHash: null,
         localProvider: null,
         defaultProvider: null,
@@ -93,6 +94,7 @@
         showDonationModal: false,
       };
     },
+    
     async created() {
       this.localProvider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545");
 
@@ -100,6 +102,7 @@
       this.nftBadgeContract = new ethers.Contract(this.campaign.nftBadgeAddress, NFTBadge.abi, this.localProvider);
       this.setupBadgeMintedListener();
       this.getCampaignDetails();
+      this.fetchRecentDonations();
 
       this.defaultProvider = new ethers.providers.Web3Provider(window.ethereum);
       this.ipfsContract = new ethers.Contract(IPFS.address, IPFS.abi, this.defaultProvider);
@@ -123,6 +126,42 @@
       },
     },
     methods: {
+      async fetchRecentDonations() {
+        try {
+          const filter = this.campaignContract.filters.ContributionMade();
+          const events = await this.campaignContract.queryFilter(filter, -10000); // Search last 10,000 blocks
+          const recentEvents = events.slice(-3).reverse(); // Get the 3 most recent donations
+
+          this.recentDonations = await Promise.all(
+            recentEvents.map(async (event) => {
+              try {
+                // Fetch user details from JSON database using the contributor address
+                const response = await axios.get(`http://localhost:5000/users/${event.args.contributor.toLowerCase()}`);
+                const user = response.data; // Fetch user details directly by ID
+                const name = user ? user.name : event.args.contributor; // Use ID (address) if no additional user data is available
+
+                return {
+                  name, // Address or ID
+                  amount: weiToDollars(event.args.amount._hex),
+                  badgeMinted: event.args.badgeMinted,
+                  timestamp: event.blockNumber, // Optionally convert block number to timestamp if needed
+                };
+              } catch (error) {
+                console.error(`Error fetching user for address ${event.args.contributor}:`, error.message);
+                return {
+                  name: event.args.contributor, // Default to address if the user is not found
+                  amount: weiToDollars(event.args.amount._hex),
+                  badgeMinted: event.args.badgeMinted,
+                  timestamp: event.blockNumber,
+                };
+              }
+            })
+          );
+        } catch (error) {
+          console.error("Error fetching recent donations:", error.message);
+          this.recentDonations = [];
+        }
+      },
       async getCampaignDetails() {
         var campaignDetails = await this.campaignContract.getCampaignStatus();
         this.campaign = {
@@ -208,7 +247,10 @@
 
         try {
           const nftGenerator = this.$refs['nft-generator'];
-          if (!nftGenerator) return;
+          if (!nftGenerator) {
+            console.log("No NFT generator found");
+            return;
+          }
 
           const canvas = nftGenerator.$refs.canvas;
           const canvasBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));

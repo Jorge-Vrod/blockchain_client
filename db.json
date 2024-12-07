@@ -64,8 +64,10 @@
   "users": [
     {
       "id": "0x0aadf33c66fbae2bc9d412ab3b73325d7c112dff",
+      "name": "Federico",
       "cids": [
-        "QmaLpQLGCuD13RCYTJmhoxzkpdnhVsL4aFhK8dYPKJK8MG"
+        "QmaLpQLGCuD13RCYTJmhoxzkpdnhVsL4aFhK8dYPKJK8MG",
+        "Qmewbhbo2dQWZWXso8T4LWucQbPqaqrVHNXBoYWmPRg83N"
       ]
     }
   ]

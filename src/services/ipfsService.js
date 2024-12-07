@@ -2,6 +2,7 @@ import { create } from 'kubo-rpc-client'
 import axios from 'axios';
 
 export const uploadToIPFS = async (canvasBlob, userAddress) => {
+  console.log("Uploading to IPFS");
   const client = create({ url: "/ip4/127.0.0.1/tcp/5001" });
 
   try {
