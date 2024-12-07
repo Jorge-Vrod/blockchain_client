@@ -6,7 +6,7 @@ const fs = require("fs");
 const CampaignABI = require("../artifacts/contracts/Campaign.sol/Campaign.json"); // Load ABI from artifacts
 
 const app = express();
-const PORT = 5001;
+const PORT = 5002;
 
 // Middleware
 app.use(bodyParser.json());

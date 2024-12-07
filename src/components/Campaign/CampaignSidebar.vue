@@ -143,7 +143,7 @@
             this.nftHash = badgeId._hex;
             if (this.nftHash) {
               this.getCampaignDetails();
-              await this.uploadToIPFS();
+              await this.uploadToIPFS(signerAddress);
             }
           }
         });
@@ -202,19 +202,19 @@
           this.errorMessage = "There was an issue with your donation. Please try again.";
         }
       },
-      async uploadToIPFS() {
+      async uploadToIPFS(signerAddress) {
         this.errorMessage = "";
         this.uploadMessage = "Uploading image to IPFS...";
 
         try {
-          const nftGenerator = this.$refs['nftGenerator'];
+          const nftGenerator = this.$refs['nft-generator'];
           if (!nftGenerator) return;
 
           const canvas = nftGenerator.$refs.canvas;
           const canvasBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
           if (!canvasBlob) throw new Error("Failed to generate canvas image blob.");
 
-          const cid = await uploadToIPFS(canvasBlob);
+          const cid = await uploadToIPFS(canvasBlob, signerAddress);
           this.uploadMessage = "Image uploaded successfully! CID: " + cid;
         } catch (error) {
           console.error("Error during upload:", error.message);

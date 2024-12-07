@@ -2,20 +2,22 @@
   <div class="row">
     <div class="col-md-8">
       <edit-profile-form :model="model"> </edit-profile-form>
-      <div class="file-upload-section mt-4">
-        <h4>Upload File to IPFS</h4>
-        <form @submit.prevent="handleSubmit">
-          <input type="file" @change="retrieveFile" class="form-control mb-3" />
-          <button type="submit" class="btn btn-primary">Upload</button>
-        </form>
-        <div v-if="ipfsHash" class="mt-3">
-          <p><strong>IPFS Hash:</strong> {{ ipfsHash }}</p>
-          <a :href="'https://ipfs.io/ipfs/' + ipfsHash" target="_blank" class="btn btn-link">View File</a>
-        </div>
-      </div>
     </div>
     <div class="col-md-4">
       <user-card :user="user"></user-card>
+      <div class="badges-section mt-4">
+        <h4>Your Badges</h4>
+        <div v-if="badges.length > 0">
+          <ul class="badge-list">
+            <li v-for="(badge, index) in badges" :key="index">
+              <img :src="badge.imageData" alt="Badge" class="badge-image" />
+            </li>
+          </ul>
+        </div>
+        <div v-else>
+          <p>No badges found.</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -23,9 +25,9 @@
 <script>
 import EditProfileForm from "./Profile/EditProfileForm";
 import UserCard from "./Profile/UserCard";
-import { create } from "kubo-rpc-client";
+import axios from "axios";
 import { ethers } from "ethers";
-import { Buffer } from "buffer";
+import { create } from "kubo-rpc-client";
 
 export default {
   components: {
@@ -51,86 +53,99 @@ export default {
         title: "Ceo/Co-Founder",
         description: `Do not be scared of the truth because we need to restart the human foundation in truth And I love you like Kanye loves Kanye I love Rick Owens’ bed design but the back is...`,
       },
-      ipfsHash: "",
-      file: null,
-      client: null,
-      ipfsContract: null,
-      ZERO_ADDRESS: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      badges: [], // Array to store badges with images
     };
   },
-  mounted() {
-    this.initialize();
-    this.readCurrentUserFile();
+  async created() {
+    await this.fetchBadges();
   },
   methods: {
-    async initialize() {
-      if (window.ethereum) {
-        await window.ethereum.enable();
-        const defaultProvider = new ethers.providers.Web3Provider(window.ethereum);
-        this.ipfsContract = new ethers.Contract(
-          addresses.ipfs,
-          abis.ipfs,
-          defaultProvider
-        );
-      } else {
-        console.error("Ethereum wallet is not connected");
-      }
-    },
-    async readCurrentUserFile() {
-      const signer = this.ipfsContract.provider.getSigner();
-      const result = await this.ipfsContract.userFiles(await signer.getAddress());
-      if (result !== this.ZERO_ADDRESS) {
-        this.ipfsHash = result;
-      }
-    },
-    async setFileIPFS(hash) {
-      const signer = this.ipfsContract.provider.getSigner();
-      const ipfsWithSigner = this.ipfsContract.connect(signer);
-      const tx = await ipfsWithSigner.setFileIPFS(hash);
-      console.log("Transaction: ", tx);
-      this.ipfsHash = hash;
-    },
-    async handleSubmit() {
+    async fetchBadges() {
       try {
-        if (!this.file) {
-          console.error("No file selected");
-          return;
+        window.ethereum.enable();
+
+        this.localProvider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545");
+
+        // Get user Ethereum address
+        const signerAddress = (await this.localProvider.getSigner().getAddress()).toLowerCase();
+
+        // Fetch the user's badge CIDs from the JSON server
+        const response = await axios.get(
+          `http://localhost:5000/users/${signerAddress}`
+        );
+
+        if (response.data && response.data.cids) {
+          const cids = response.data.cids;
+
+          // Initialize IPFS client
+          const ipfs = create({ url: "/ip4/127.0.0.1/tcp/5001" });
+
+          // Retrieve files for each CID
+          const badgesWithFiles = await Promise.all(
+            cids.map(async (cid) => {
+              try {
+                // Fetch the file as a Uint8Array
+                const chunks = [];
+                console.log("Retrieving file from IPFS with CID:", cid);
+                for await (const chunk of ipfs.cat(cid)) {
+                  chunks.push(chunk);
+                }
+
+                const fileData = new Uint8Array(chunks.reduce((acc, chunk) => {
+                  const array = new Uint8Array(chunk);
+                  return [...acc, ...array];
+                }, [])); 
+                console.log(fileData);
+
+                if (fileData.length === 0) {
+                  console.error(`No data retrieved for CID: ${cid}`);
+                  return { cid, imageData: null };
+                }
+
+                const base64Data = btoa(
+                  Array.from(fileData)
+                    .map((byte) => String.fromCharCode(byte))
+                    .join("")
+                );
+                const imageData = `data:image/png;base64,${base64Data}`; // Assuming the file is PNG
+
+                return { cid, imageData };
+              } catch (error) {
+                console.error(`Error retrieving file for CID ${cid}:`, error.message);
+                return { cid, imageData: null };
+              }
+            })
+          );
+
+          this.badges = badgesWithFiles.filter((badge) => badge.imageData); // Exclude badges without valid image data
         }
-        this.client = await create("/ip4/0.0.0.0/tcp/5001");
-
-        // Upload file to IPFS
-        const result = await this.client.add(this.file);
-
-        // Save file to the local IPFS node
-        await this.client.files.cp(`/ipfs/${result.cid}`, `/${result.cid}`);
-
-        console.log("IPFS CID:", result.cid);
-
-        // Save the CID to Ethereum via the smart contract
-        await this.setFileIPFS(result.cid.toString());
       } catch (error) {
-        console.error("Error during file upload:", error.message);
+        console.error("Error fetching badges:", error.message);
+        this.badges = [];
       }
-    },
-    retrieveFile(event) {
-      const data = event.target.files[0];
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(data);
-      reader.onloadend = () => {
-        this.file = Buffer.from(reader.result);
-      };
     },
   },
 };
 </script>
 
 <style scoped>
-.file-upload-section {
-  background-color: #f8f9fa;
+.badges-section {
   padding: 20px;
   border-radius: 5px;
 }
-.file-upload-section h4 {
-  margin-bottom: 20px;
+.badge-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+.badge-list li {
+  margin: 10px;
+}
+.badge-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 5px;
+  object-fit: cover;
 }
 </style>

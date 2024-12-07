@@ -125,7 +125,7 @@ export default {
       try {
         var newId = this.campaigns.length + 1; // Assign sequential ID
         // Deploy the campaign contract on the blockchain
-        const deployResponse = await axios.post("http://localhost:5001/deploy-campaign", {
+        const deployResponse = await axios.post("http://localhost:5002/deploy-campaign", {
           id: newId,
           goal: dollarsToWeis(this.form.objective)._hex, // Campaign goal
           duration: 10000000, // Example duration
