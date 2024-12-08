@@ -182,7 +182,7 @@
             this.nftHash = badgeId._hex;
             if (this.nftHash) {
               this.getCampaignDetails();
-              await this.uploadToIPFS(signerAddress);
+              this.waitForNFTGeneratorAndUpload(signerAddress);
             }
           }
         });
@@ -241,18 +241,38 @@
           this.errorMessage = "There was an issue with your donation. Please try again.";
         }
       },
-      async uploadToIPFS(signerAddress) {
+      async waitForNFTGeneratorAndUpload(signerAddress) {
+        const checkComponent = async (resolve) => {
+          const nftGenerator = this.$refs['nft-generator'];
+          if (nftGenerator) {
+            resolve(nftGenerator);
+          } else {
+            setTimeout(() => checkComponent(resolve), 100); // Retry after 100ms
+          }
+        };
+
+        try {
+          const nftGenerator = await new Promise(checkComponent);
+          if (nftGenerator) {
+            await this.uploadToIPFS(nftGenerator, signerAddress);
+          }
+        } catch (error) {
+          console.error("Error waiting for NFT generator:", error.message);
+        }
+      },
+      async uploadToIPFS(nftGenerator, signerAddress) {
         this.errorMessage = "";
         this.uploadMessage = "Uploading image to IPFS...";
 
         try {
-          const nftGenerator = this.$refs['nft-generator'];
           if (!nftGenerator) {
             console.log("No NFT generator found");
             return;
           }
 
           const canvas = nftGenerator.$refs.canvas;
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Adjust delay if needed
+
           const canvasBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
           if (!canvasBlob) throw new Error("Failed to generate canvas image blob.");
 
